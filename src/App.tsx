@@ -6,6 +6,23 @@ export const App = () => {
   const [todos, setTodos] = useState<Todo[]>([])
   const [filter, setFilter] = useState<Filter>('all')
 
+  const handleTodo = <K extends keyof Todo, V extends Todo[K]>(
+    id: number,
+    key: K,
+    value: V,
+  ) => {
+    setTodos((todos) => {
+      const newTodos = todos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, [key]: value }
+        }
+        return todo
+      })
+
+      return newTodos
+    })
+  }
+
   const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
     setText(e.target.value)
   }
@@ -22,45 +39,6 @@ export const App = () => {
 
     setTodos((todos) => [newTodo, ...todos])
     setText('')
-  }
-
-  const handleEdit = (id: number, value: string) => {
-    setTodos((todos) => {
-      const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
-          return { ...todo, value }
-        }
-        return todo
-      })
-
-      return newTodos
-    })
-  }
-
-  const handleCheck = (id: number, checked: boolean) => {
-    setTodos((todos) => {
-      const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
-          return { ...todo, checked }
-        }
-        return todo
-      })
-
-      return newTodos
-    })
-  }
-
-  const handleRemove = (id: number, removed: boolean) => {
-    setTodos((todos) => {
-      const newTodos = todos.map((todo) => {
-        if (todo.id === id) {
-          return { ...todo, removed }
-        }
-        return todo
-      })
-
-      return newTodos
-    })
   }
 
   const handleFilter = (filter: Filter) => {
@@ -126,17 +104,17 @@ export const App = () => {
                 type="checkbox"
                 disabled={todo.removed}
                 checked={todo.checked}
-                onChange={() => handleCheck(todo.id, !todo.checked)}
+                onChange={() => handleTodo(todo.id, 'checked', !todo.checked)}
               />
               <input
                 type="text"
                 disabled={todo.checked || todo.removed}
                 value={todo.value}
-                onChange={(e) => handleEdit(todo.id, e.target.value)}
+                onChange={(e) => handleTodo(todo.id, 'value', e.target.value)}
               />
               <button
                 type="button"
-                onClick={() => handleRemove(todo.id, !todo.removed)}
+                onClick={() => handleTodo(todo.id, 'removed', !todo.removed)}
               >
                 {todo.removed ? '復元' : '削除'}
               </button>
