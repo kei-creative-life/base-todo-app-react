@@ -1,35 +1,149 @@
 import { useState } from 'react'
-import reactLogo from './assets/react.svg'
-import viteLogo from '/vite.svg'
-import './App.css'
+import type { Filter, Todo } from '../types/todo'
 
-function App() {
-  const [count, setCount] = useState(0)
+export const App = () => {
+  const [text, setText] = useState('')
+  const [todos, setTodos] = useState<Todo[]>([])
+  const [filter, setFilter] = useState<Filter>('all')
+
+  const handleChange = (e: React.ChangeEvent<HTMLInputElement>) => {
+    setText(e.target.value)
+  }
+
+  const handleSubmit = () => {
+    if (!text) return
+
+    const newTodo: Todo = {
+      value: text,
+      id: new Date().getTime(),
+      checked: false,
+      removed: false,
+    }
+
+    setTodos((todos) => [newTodo, ...todos])
+    setText('')
+  }
+
+  const handleEdit = (id: number, value: string) => {
+    setTodos((todos) => {
+      const newTodos = todos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, value }
+        }
+        return todo
+      })
+
+      return newTodos
+    })
+  }
+
+  const handleCheck = (id: number, checked: boolean) => {
+    setTodos((todos) => {
+      const newTodos = todos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, checked }
+        }
+        return todo
+      })
+
+      return newTodos
+    })
+  }
+
+  const handleRemove = (id: number, removed: boolean) => {
+    setTodos((todos) => {
+      const newTodos = todos.map((todo) => {
+        if (todo.id === id) {
+          return { ...todo, removed }
+        }
+        return todo
+      })
+
+      return newTodos
+    })
+  }
+
+  const handleFilter = (filter: Filter) => {
+    setFilter(filter)
+  }
+
+  const handleEmpty = () => {
+    setTodos((todos) => todos.filter((todo) => !todo.removed))
+  }
+
+  const filteredTodos = todos.filter((todo) => {
+    switch (filter) {
+      case 'all':
+        return !todo.removed
+      case 'checked':
+        return todo.checked && !todo.removed
+      case 'unchecked':
+        return !todo.checked && !todo.removed
+      case 'removed':
+        return todo.removed
+      default:
+        return todo
+    }
+  })
 
   return (
-    <>
-      <div>
-        <a href="https://vite.dev" target="_blank" rel="noreferrer">
-          <img src={viteLogo} className="logo" alt="Vite logo" />
-        </a>
-        <a href="https://react.dev" target="_blank" rel="noreferrer">
-          <img src={reactLogo} className="logo react" alt="React logo" />
-        </a>
-      </div>
-      <h1>Vite + React</h1>
-      <div className="card">
-        <button type="button" onClick={() => setCount((count) => count + 1)}>
-          count is {count}
+    <div>
+      <select
+        defaultValue="all"
+        onChange={(e) => handleFilter(e.target.value as Filter)}
+      >
+        <option value="all">すべてのタスク</option>
+        <option value="checked">完了したタスク</option>
+        <option value="unchecked">現在のタスク</option>
+        <option value="removed">ごみ箱</option>
+      </select>
+      {filter === 'removed' ? (
+        <button
+          type="button"
+          onClick={handleEmpty}
+          disabled={todos.filter((todo) => todo.removed).length === 0}
+        >
+          ごみ箱を空にする
         </button>
-        <p>
-          Edit <code>src/App.tsx</code> and save to test HMR
-        </p>
-      </div>
-      <p className="read-the-docs">
-        Click on the Vite and React logos to learn more
-      </p>
-    </>
+      ) : (
+        filter !== 'checked' && (
+          <form
+            onSubmit={(e) => {
+              e.preventDefault()
+              handleSubmit()
+            }}
+          >
+            <input type="text" value={text} onChange={(e) => handleChange(e)} />
+            <input type="submit" value="追加" onSubmit={handleSubmit} />
+          </form>
+        )
+      )}
+      <ul>
+        {filteredTodos.map((todo) => {
+          return (
+            <li key={todo.id}>
+              <input
+                type="checkbox"
+                disabled={todo.removed}
+                checked={todo.checked}
+                onChange={() => handleCheck(todo.id, !todo.checked)}
+              />
+              <input
+                type="text"
+                disabled={todo.checked || todo.removed}
+                value={todo.value}
+                onChange={(e) => handleEdit(todo.id, e.target.value)}
+              />
+              <button
+                type="button"
+                onClick={() => handleRemove(todo.id, !todo.removed)}
+              >
+                {todo.removed ? '復元' : '削除'}
+              </button>
+            </li>
+          )
+        })}
+      </ul>
+    </div>
   )
 }
-
-export default App
