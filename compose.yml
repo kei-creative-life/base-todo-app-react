@@ -1,0 +1,17 @@
+services:
+  app:
+    image: app-image
+    container_name: app-container
+    build:
+      context: .
+      dockerfile: docker/app.Dockerfile
+    ports:
+      - "3000:3000"
+    volumes:
+      - .:/app
+      - /app/node_modules
+    environment:
+      - NODE_ENV=development
+    restart: always
+    stdin_open: true
+    tty: true
